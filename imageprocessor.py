@@ -187,7 +187,7 @@ print("Loading Data...")
 # df = processImages()
 df = loadData()
 print("Started Training...")
-classes = kmeans(df, 2)
+classes = kmeans(df, 10)
 print("Creating results...")
 for i, c in enumerate(classes):
     result = combineImages(c)
