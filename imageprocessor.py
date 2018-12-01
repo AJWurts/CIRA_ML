@@ -12,7 +12,7 @@ from sklearn.cluster import KMeans
 CANCER_FOLDER_NAME = '.\\sendzip\\unhealthyCells'
 HEALTHY_FOLDER_NAME = '.\\sendzip\\healthyCells'
 
-IMAGE_SIZE = 25
+IMAGE_SIZE = 50
 
 def processArray(array):
     X = []
@@ -29,18 +29,35 @@ def processArray(array):
     return X
 
 
-def remakeImage(array, size=IMAGE_SIZE):
+def remakeImage(array, size=IMAGE_SIZE, isCancer=False):
     if type(size) == int:
         size = (size, size)
     image = Image.new('RGB', (size[0], size[1]))
-    output = np.zeros((size[0], size[1]))
+    output = np.zeros((size[0], size[1], 3))
     for x in range(size[0]):
         for y in range(size[1]):
             red_val = int(array[x * size[1] + y])
-            image.putpixel((x, y), (red_val, 0, 0))
-            output[x,y] = red_val
+            if isCancer:
+                image.putpixel((x, y), (0, red_val, 0))
+                output[x,y] = (0, red_val, 0)
+            else:
+                image.putpixel((x, y), (red_val, 0, 0))
+                output[x,y] = (red_val, 0, 0)
+            
     
     return image, output
+
+
+def remakeColoredImage(array, size=IMAGE_SIZE):
+    if type(size) == int:
+        size = (size, size)
+    image = Image.new('RGB', (size[0], size[1]))
+    for x in range(size[0]):
+        for y in range(size[1]):
+            pixel = array[y, x]
+            image.putpixel((x, y), (int(pixel[0]), int(pixel[1]), int(pixel[2])))
+    
+    return image
 
 
 
@@ -48,26 +65,27 @@ def remakeImage(array, size=IMAGE_SIZE):
 def combineImages(image_arrays, size=IMAGE_SIZE):
     # Width is constant, Height is defined by how many images it can fit.
     #
-    width = 800
+    width = 1000
     numRows = int(len(image_arrays) / (width / size)) + 1
     height =  numRows * size
 
-    img_arr = np.zeros((height, width))
-    print(img_arr.size)
+    img_arr = np.zeros((height, width, 3))
+    # print(img_arr.size)
     x = 0
     y = 0
     x_incr = size
     y_incr = size
 
-    for img in image_arrays:
+    dictionary  = image_arrays.to_dict('records')
+    for img in dictionary:
         if x >= width:
             x = 0
             y += y_incr
-        _, array = remakeImage(img)
+        _, array = remakeImage(img['data'], isCancer=img['class'] == 'cancer')
         img_arr[y:y+size, x:x+size] = array
         x += x_incr
 
-    image, _ = remakeImage(img_arr.flatten('F'), size=(width, height))
+    image = remakeColoredImage(img_arr, size=(width, height))
     return image
         
     
@@ -93,7 +111,7 @@ def processImages(size=IMAGE_SIZE):
     for img in both:
         image = Image.open(img)
         image = image.resize((size, size))
-        print(image.size)
+        # print(image.size)
         R = []
         for x in range(image.size[0]):
             for y in range(image.size[1]):
@@ -138,7 +156,7 @@ def kmeans(df, clusters=5):
     classes = []
     for i in range(clusters):
         classes.append(df[clustering.labels_ == i])
-        print("Class", str(i), "count:", classes[-1]['class'].value_counts())
+        print("Class", str(i), "count:\n", classes[-1]['class'].value_counts())
     # c1 = df[clustering.labels_ == 0]
     # c2 = df[clustering.labels_ == 1]
     # c3 = df[clustering.labels_ == 2]
@@ -169,17 +187,9 @@ print("Loading Data...")
 # df = processImages()
 df = loadData()
 print("Started Training...")
-
-classes = kmeans(df)
-
+classes = kmeans(df, 2)
+print("Creating results...")
 for i, c in enumerate(classes):
-    result = combineImages(c['data'].values)
+    result = combineImages(c)
     result.save("C" + str(i) + '.jpg')
-# neg_img = combineImages(neg['data'].values)
-# neg_img.save("Negative_Cells.jpg")
-
-# pos_img = combineImages(pos['data'].values)
-# pos_img.save('Positive Cells.jpg')
-
-# img, _ = combineImages(df['data'].values)
-# img.show()
+print("Finished")
