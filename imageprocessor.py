@@ -29,20 +29,21 @@ def processArray(array):
     return X
 
 
-def remakeImage(array, size=IMAGE_SIZE, isCancer=False):
+def remakeImage(df, size=IMAGE_SIZE, isCancer=False):
     if type(size) == int:
         size = (size, size)
     image = Image.new('RGB', (size[0], size[1]))
     output = np.zeros((size[0], size[1], 3))
     for x in range(size[0]):
         for y in range(size[1]):
-            red_val = int(array[x * size[1] + y])
+            red_val = 0#int(df['red'][x * size[1] + y])
+            green_val = int(df['green'][x * size[1] + y])
             if isCancer:
-                image.putpixel((x, y), (0, red_val, 0))
-                output[x,y] = (0, red_val, 0)
+                image.putpixel((x, y), (0, green_val, 0))
+                output[x,y] = (0, green_val, 0)
             else:
-                image.putpixel((x, y), (red_val, 0, 0))
-                output[x,y] = (red_val, 0, 0)
+                image.putpixel((x, y), (red_val, green_val, 0))
+                output[x,y] = (red_val, green_val, 0)
             
     
     return image, output
@@ -81,7 +82,7 @@ def combineImages(image_arrays, size=IMAGE_SIZE):
         if x >= width:
             x = 0
             y += y_incr
-        _, array = remakeImage(img['data'], isCancer=img['class'] == 'cancer')
+        _, array = remakeImage(img, isCancer=img['class'] == 'cancer')
         img_arr[y:y+size, x:x+size] = array
         x += x_incr
 
@@ -104,7 +105,7 @@ def processImages(size=IMAGE_SIZE):
         baseName2 = base + str(i) + '\\unhealthyCells\\'
         cancer_images += [join(baseName2, f) for f in listdir(baseName2) if isfile(join(baseName2, f))]
 
-    df = pd.DataFrame(columns=['data', 'class'])
+    df = pd.DataFrame(columns=['red', 'class'])
     both = cancer_images + healthy_images
 
     shuffle(both)
@@ -113,16 +114,17 @@ def processImages(size=IMAGE_SIZE):
         image = image.resize((size, size))
         # print(image.size)
         R = []
+        G = []
         for x in range(image.size[0]):
             for y in range(image.size[1]):
                 pixel = image.getpixel((x, y))
         
                 R.append(pixel[0])
+                G.append(pixel[1])
         if 'unhealthy' in img:
-            df = df.append({'data': R, "class": 'cancer'}, ignore_index=True)
+            df = df.append({'red': R, 'green': G, "class": 'cancer'}, ignore_index=True)
         else:
-            df = df.append({'data': R, "class": 'healthy'}, ignore_index=True)
-
+            df = df.append({'red': R, 'green': G, "class": 'healthy'}, ignore_index=True)
 
     df.to_csv('data_' + (2 * str(size)) + '.csv')
     return df
@@ -141,14 +143,15 @@ def loadData(size=IMAGE_SIZE):
 
     df = pd.read_csv('data_' + (2 * str(IMAGE_SIZE)) + '.csv')
 
-    df['data'] = processArray(df['data'])
+    df['red'] = processArray(df['red'])
+    df['green'] = processArray(df['green'])
 
     return df
 
 
 def kmeans(df, clusters=5):
 
-    clustering = KMeans(n_clusters=clusters).fit(list(df['data']))
+    clustering = KMeans(n_clusters=clusters).fit(list(df['red']))
     print(clustering.labels_)
     negative = clustering.labels_[clustering.labels_ == 0]
     positive = clustering.labels_[clustering.labels_ == 1]
@@ -172,22 +175,22 @@ def svm(df):
     train, test = train_test_split(df)
     clf = SVC(gamma=2, C=1)
     # clf = DecisionTreeClassifier()
-    clf.fit(list(train['data'].values), train['class'].values)
+    clf.fit(list(train['red'].values), train['class'].values)
 
-    score = clf.score(list(test['data'].values), test['class'].values)
+    score = clf.score(list(test['red'].values), test['class'].values)
 
     print(score)
 
-    prediction = clf.predict(list(test['data']))
+    prediction = clf.predict(list(test['red']))
     print(len(prediction[(prediction == 'healthy') & (test['class'] == 'cancer')]))
     print(len(prediction[(prediction == 'cancer') & (test['class'] == 'healthy')]))
-    # print(clf.predict(list(train['data'])))
+    # print(clf.predict(list(train['red'])))
 
 print("Loading Data...")
-# df = processImages()
-df = loadData()
+df = processImages()
+# df = loadData()
 print("Started Training...")
-classes = kmeans(df, 10)
+classes = kmeans(df, 5)
 print("Creating results...")
 for i, c in enumerate(classes):
     result = combineImages(c)
