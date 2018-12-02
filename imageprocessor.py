@@ -10,11 +10,12 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.cluster import KMeans
 from sklearn.linear_model import LogisticRegression
 import timeit
+from graphing import graphThings
 
 CANCER_FOLDER_NAME = '.\\sendzip\\unhealthyCells'
 HEALTHY_FOLDER_NAME = '.\\sendzip\\healthyCells'
 
-IMAGE_SIZE = 30
+IMAGE_SIZE = 50
 
 def processArray(array):
     X = []
@@ -239,7 +240,11 @@ df = processImages()
 # df = loadData()
 print("Started Training...")
 # classes = kmeans(df, 5)
-print(timeit.timeit("logistic(df)", globals=globals(), number=1))
+# print(timeit.timeit("logistic(df)", globals=globals(), number=1))
+classes = kmeans(df, 20)
+graphThings(classes)
+
+
 print("Creating results...")
 # for i, c in enumerate(classes):
 #     result = combineImages(c)
