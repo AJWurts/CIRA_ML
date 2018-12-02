@@ -9,11 +9,12 @@ from random import shuffle
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.cluster import KMeans
 from sklearn.linear_model import LogisticRegression
+import timeit
 
 CANCER_FOLDER_NAME = '.\\sendzip\\unhealthyCells'
 HEALTHY_FOLDER_NAME = '.\\sendzip\\healthyCells'
 
-IMAGE_SIZE = 50
+IMAGE_SIZE = 30
 
 def processArray(array):
     X = []
@@ -67,7 +68,8 @@ def remakeColoredImage(array, size=IMAGE_SIZE):
 def combineImages(image_arrays, size=IMAGE_SIZE):
     # Width is constant, Height is defined by how many images it can fit.
     #
-    width = 1000
+    # Num per row = 
+    width = 120
     numRows = int(len(image_arrays) / (width / size)) + 1
     height =  numRows * size
 
@@ -150,17 +152,17 @@ def loadData(size=IMAGE_SIZE):
     return df
 
 
-def kmeans(df, clusters=5):
+def kmeans(df, clusters=2):
 
     clustering = KMeans(n_clusters=clusters).fit(list(df['red']))
     print(clustering.labels_)
-    negative = clustering.labels_[clustering.labels_ == 0]
-    positive = clustering.labels_[clustering.labels_ == 1]
+  
 
     classes = []
     for i in range(clusters):
         classes.append(df[clustering.labels_ == i])
         print("Class", str(i), "count:\n", classes[-1]['class'].value_counts())
+
     # c1 = df[clustering.labels_ == 0]
     # c2 = df[clustering.labels_ == 1]
     # c3 = df[clustering.labels_ == 2]
@@ -182,10 +184,21 @@ def svm(df):
 
     print(score)
 
-    prediction = clf.predict(list(test['red']))
-    print(len(prediction[(prediction == 'healthy') & (test['class'] == 'cancer')]))
-    print(len(prediction[(prediction == 'cancer') & (test['class'] == 'healthy')]))
+    prediction = clf.predict(list(test['red'].values))
+    # print(len(prediction[(prediction == 'healthy') & (test['class'] == 'cancer')]))
+    # print(len(prediction[(prediction == 'cancer') & (test['class'] == 'healthy')]))
+    print(prediction)
+    healthy = test[prediction == 'healthy']
+    cancer = test[prediction == 'cancer']
+
+
+    result = combineImages(healthy)
+    result.save("healthy_svm" + str(IMAGE_SIZE) + ".jpg")
+    result = combineImages(cancer)
+    result.save("cancer_svm" + str(IMAGE_SIZE) + ".jpg")
     # print(clf.predict(list(train['red'])))
+
+    return clf
 
 def logistic(df):
     train, test = train_test_split(df)
@@ -211,10 +224,9 @@ def logistic(df):
 
 
     result = combineImages(healthy)
-    result.save("healthy_log.jpg")
-    cancer = train[prediction == 'cancer']
+    result.save("healthy_log" + str(IMAGE_SIZE) + ".jpg")
     result = combineImages(cancer)
-    result.save("cancer_log.jpg")
+    result.save("cancer_log" + str(IMAGE_SIZE) + ".jpg")
 
 
     print(score)
@@ -223,11 +235,11 @@ def logistic(df):
 
 
 print("Loading Data...")
-# df = processImages()
-df = loadData()
+df = processImages()
+# df = loadData()
 print("Started Training...")
 # classes = kmeans(df, 5)
-clf = logistic(df)
+print(timeit.timeit("logistic(df)", globals=globals(), number=1))
 print("Creating results...")
 # for i, c in enumerate(classes):
 #     result = combineImages(c)
