@@ -8,6 +8,7 @@ from sklearn.svm import SVC, LinearSVC
 from random import shuffle
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.cluster import KMeans
+from sklearn.linear_model import LogisticRegression
 
 CANCER_FOLDER_NAME = '.\\sendzip\\unhealthyCells'
 HEALTHY_FOLDER_NAME = '.\\sendzip\\healthyCells'
@@ -36,14 +37,14 @@ def remakeImage(df, size=IMAGE_SIZE, isCancer=False):
     output = np.zeros((size[0], size[1], 3))
     for x in range(size[0]):
         for y in range(size[1]):
-            red_val = 0#int(df['red'][x * size[1] + y])
+            red_val = int(df['red'][x * size[1] + y])
             green_val = int(df['green'][x * size[1] + y])
             if isCancer:
                 image.putpixel((x, y), (0, green_val, 0))
                 output[x,y] = (0, green_val, 0)
             else:
-                image.putpixel((x, y), (red_val, green_val, 0))
-                output[x,y] = (red_val, green_val, 0)
+                image.putpixel((x, y), (red_val, 0, 0))
+                output[x,y] = (red_val, 0, 0)
             
     
     return image, output
@@ -186,13 +187,49 @@ def svm(df):
     print(len(prediction[(prediction == 'cancer') & (test['class'] == 'healthy')]))
     # print(clf.predict(list(train['red'])))
 
+def logistic(df):
+    train, test = train_test_split(df)
+    clf = LogisticRegression()
+    clf.fit(list(train['red'].values), train['class'].values)
+
+    score = clf.score(list(test['red'].values), test['class'].values)
+
+    prediction = clf.predict(list(test['red'].values))
+
+    # TP = test[(prediction == 'healthy') & (train['class'] == 'healthy')]
+    # # TP['color'] = 'green'
+    # TN = test[(prediction == 'cancer') & (train['class'] == 'cancer')]
+    # # TN['color'] = 'red'
+    # FP = test[(prediction == 'healthy') & (train['class'] == 'cancer')]
+    # # FP['color'] = 'yellow'
+    # FN = test[(prediction == 'cancer') & (train['class'] == 'healthy')]
+    # # FN['color'] = 'blue'
+
+
+    healthy = test[prediction == 'healthy']
+    cancer = test[prediction == 'cancer']
+
+
+    result = combineImages(healthy)
+    result.save("healthy_log.jpg")
+    cancer = train[prediction == 'cancer']
+    result = combineImages(cancer)
+    result.save("cancer_log.jpg")
+
+
+    print(score)
+
+    return clf
+
+
 print("Loading Data...")
-df = processImages()
-# df = loadData()
+# df = processImages()
+df = loadData()
 print("Started Training...")
-classes = kmeans(df, 5)
+# classes = kmeans(df, 5)
+clf = logistic(df)
 print("Creating results...")
-for i, c in enumerate(classes):
-    result = combineImages(c)
-    result.save("C" + str(i) + '.jpg')
+# for i, c in enumerate(classes):
+#     result = combineImages(c)
+#     result.save("C" + str(i) + '.jpg')
 print("Finished")
