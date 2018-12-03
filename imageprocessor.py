@@ -10,11 +10,12 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.cluster import KMeans
 from sklearn.linear_model import LogisticRegression
 import timeit
+from tqdm import tqdm
 
 CANCER_FOLDER_NAME = '.\\sendzip\\unhealthyCells'
 HEALTHY_FOLDER_NAME = '.\\sendzip\\healthyCells'
 
-IMAGE_SIZE = 30
+IMAGE_SIZE = 10
 
 def processArray(array):
     X = []
@@ -95,18 +96,18 @@ def combineImages(image_arrays, size=IMAGE_SIZE):
     
 
 
-def processImages(size=IMAGE_SIZE):
+def processImages(size=IMAGE_SIZE, qtn=10000):
 
     cancer_images = []
     healthy_images = []
     # cancer_images = [join(CANCER_FOLDER_NAME, f) for f in listdir(CANCER_FOLDER_NAME) if isfile(join(CANCER_FOLDER_NAME, f))]
     # healthy_images = [join(HEALTHY_FOLDER_NAME, f) for f in listdir(HEALTHY_FOLDER_NAME) if isfile(join(HEALTHY_FOLDER_NAME, f))]
-    base = '.\\sendzip\\'
-    for i in [1,2,3,4,5,6,8,9,10]:
-        baseName = base + str(i) + '\\healthyCells\\'
-        healthy_images += [join(baseName, f) for f in listdir(baseName) if isfile(join(baseName, f))]
-        baseName2 = base + str(i) + '\\unhealthyCells\\'
-        cancer_images += [join(baseName2, f) for f in listdir(baseName2) if isfile(join(baseName2, f))]
+    base = '.\\sendzip2'
+    # for i in [1,2,3,4,5,6,8,9,10]:
+    baseName = base + '\\healthyCells'
+    healthy_images += [join(baseName, f) for f in tqdm(listdir(baseName)[:qtn]) if isfile(join(baseName, f))]
+    baseName2 = base + '\\unhealthyCells'
+    cancer_images += [join(baseName2, f) for f in tqdm(listdir(baseName2)[:qtn]) if isfile(join(baseName2, f))]
 
     df = pd.DataFrame(columns=['red', 'class'])
     both = cancer_images + healthy_images
@@ -235,13 +236,13 @@ def logistic(df):
 
 
 print("Loading Data...")
-df = processImages()
-# df = loadData()
+# df = processImages(qtn=5000)
+df = loadData()
 print("Started Training...")
-# classes = kmeans(df, 5)
-print(timeit.timeit("logistic(df)", globals=globals(), number=1))
+classes = kmeans(df, 5)
+# print(timeit.timeit("logistic(df)", globals=globals(), number=1))
 print("Creating results...")
-# for i, c in enumerate(classes):
-#     result = combineImages(c)
-#     result.save("C" + str(i) + '.jpg')
+for i, c in enumerate(classes):
+    result = combineImages(c)
+    result.save("C" + str(i) + '.jpg')
 print("Finished")
