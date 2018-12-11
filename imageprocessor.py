@@ -160,7 +160,7 @@ def kmeans(df, clusters=2):
     train, test = train_test_split(df)
 
     clustering = KMeans(n_clusters=clusters).fit(list(train['red']))
-    print(clustering.labels_)
+    # print(clustering.labels_)
   
 
     classes = []
@@ -173,11 +173,11 @@ def kmeans(df, clusters=2):
 
         counts = cluster['class'].value_counts()
 
-        if 'healthy' not in count:
-            cluster_label[i] = 'cancer'
+        if 'healthy' not in counts:
+            cluster_labels[i] = 'cancer'
             continue
-        elif 'cancer' not in count:
-            cluster_label[i] = 'healthy'
+        elif 'cancer' not in counts:
+            cluster_labels[i] = 'healthy'
             continue
         if counts['healthy'] > counts['cancer']:
             cluster_labels[i] = 'healthy'
@@ -186,8 +186,8 @@ def kmeans(df, clusters=2):
         classes.append(cluster)
         # print("Class", str(i), "count:\n", counts)
 
-    print(homogeneity_score(test['class'], clustering.predict(list(test['red']))))
-    print(v_measure_score(test['class'], clustering.predict(list(test['red']))))
+    # print(homogeneity_score(test['class'], clustering.predict(list(test['red']))))
+    # print(v_measure_score(test['class'], clustering.predict(list(test['red']))))
 
     test_predictions = clustering.fit_predict(list(test['red']))
     
@@ -195,7 +195,7 @@ def kmeans(df, clusters=2):
 
     correct = len(test[result == test['class']])
 
-    print("ACcuracy: ", correct / len(test))
+    print(clusters, "ACcuracy: ", correct / len(test))
 
 
 
@@ -325,7 +325,9 @@ print("Loading Data...")
 # df = processImages()
 df = loadData()
 print("Started Training...")
-classes = kmeans(df, 20)
+for i in range(1, 21):
+    kmeans(df, i)
+
 # print(timeit.timeit("logistic(df)", globals=globals(), number=1))
 # logistic(df)
 # classes = dbscan(df)
