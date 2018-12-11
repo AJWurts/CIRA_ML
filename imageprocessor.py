@@ -164,28 +164,39 @@ def kmeans(df, clusters=2):
   
 
     classes = []
+    cluster_labels = {}
     for i in range(clusters):
-        classes.append(train[clustering.labels_ == i])
-        print("Class", str(i), "count:\n", classes[-1]['class'].value_counts())
+        
+        # print(counts)
+        # classes.append((train[clustering.labels_ == i] ))
+        cluster = train[clustering.labels_ == i]
+
+        counts = cluster['class'].value_counts()
+
+        if 'healthy' not in count:
+            cluster_label[i] = 'cancer'
+            continue
+        elif 'cancer' not in count:
+            cluster_label[i] = 'healthy'
+            continue
+        if counts['healthy'] > counts['cancer']:
+            cluster_labels[i] = 'healthy'
+        else:
+            cluster_labels[i] = 'cancer'
+        classes.append(cluster)
+        # print("Class", str(i), "count:\n", counts)
 
     print(homogeneity_score(test['class'], clustering.predict(list(test['red']))))
     print(v_measure_score(test['class'], clustering.predict(list(test['red']))))
-    # prob = []
-    # for c in classes:
-    #     prob.append(len(c[c.class == 'healthy']) / len(c))
-    # # Evaluate
-    # prediction = clustering.predict(list(test['red']))
-    
-    
-        
-            
-    # c1 = df[clustering.labels_ == 0]
-    # c2 = df[clustering.labels_ == 1]
-    # c3 = df[clustering.labels_ == 2]
 
-    # print("Class 0 Count:", c1['class'].value_counts())
-    # print("Class 1 count:", c2['class'].value_counts())
-    # print("Class 2 count:", c3['class'].value_counts())
+    test_predictions = clustering.fit_predict(list(test['red']))
+    
+    result = np.array(list(map(lambda x: cluster_labels[x], test_predictions)))
+
+    correct = len(test[result == test['class']])
+
+    print("ACcuracy: ", correct / len(test))
+
 
 
     return classes
@@ -289,7 +300,6 @@ def spectral(df, clusters=2):
     return classes
 
 
-
 def neuralnetwork(df):
     train, test = train_test_split(df)
 
@@ -315,13 +325,13 @@ print("Loading Data...")
 # df = processImages()
 df = loadData()
 print("Started Training...")
-# classes = kmeans(df, 5)
+classes = kmeans(df, 20)
 # print(timeit.timeit("logistic(df)", globals=globals(), number=1))
 # logistic(df)
 # classes = dbscan(df)
 # svm(df)
 # logistic(df)
-neuralnetwork(df)
+# neuralnetwork(df)
 
 # graphThings(classes, ratio=False)
 
@@ -331,3 +341,8 @@ neuralnetwork(df)
 #     result = combineImages(c)
 #     result.save("C" + str(i) + '.jpg')
 print("Finished")
+
+
+
+
+
