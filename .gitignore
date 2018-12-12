@@ -5,3 +5,6 @@ data*
 .vscode
 Graphs.txt
 sendzip2/*
+sendzip2.zip
+*.jpg
+*.png

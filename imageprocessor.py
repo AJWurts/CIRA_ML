@@ -15,10 +15,25 @@ import timeit
 from tqdm import tqdm
 from graphing import graphThings
 
+
+"""
+PIL used under the following license: 
+
+The Python Imaging Library (PIL) is
+
+    Copyright © 1997-2011 by Secret Labs AB
+    Copyright © 1995-2011 by Fredrik Lundh
+
+Pillow is the friendly PIL fork. It is
+
+    Copyright © 2010-2018 by Alex Clark and contributors
+"""
+
+
 CANCER_FOLDER_NAME = '.\\sendzip\\unhealthyCells'
 HEALTHY_FOLDER_NAME = '.\\sendzip\\healthyCells'
 
-IMAGE_SIZE = 10
+IMAGE_SIZE = 20
 
 def processArray(array):
     X = []
@@ -68,8 +83,6 @@ def remakeColoredImage(array, size=IMAGE_SIZE):
     return image
 
 
-
-
 def combineImages(image_arrays, size=IMAGE_SIZE):
     # Width is constant, Height is defined by how many images it can fit.
     #
@@ -98,8 +111,6 @@ def combineImages(image_arrays, size=IMAGE_SIZE):
     return image
         
     
-
-
 def processImages(size=IMAGE_SIZE, qtn=10000):
 
     cancer_images = []
@@ -117,7 +128,7 @@ def processImages(size=IMAGE_SIZE, qtn=10000):
     both = cancer_images + healthy_images
 
     shuffle(both)
-    for img in both:
+    for img in tqdm(both):
         image = Image.open(img)
         image = image.resize((size, size))
         # print(image.size)
@@ -134,7 +145,7 @@ def processImages(size=IMAGE_SIZE, qtn=10000):
         else:
             df = df.append({'red': R, 'green': G, "class": 'healthy'}, ignore_index=True)
 
-    df.to_csv('data_' + (2 * str(size)) + '.csv')
+    df.to_csv('data_' + (2 * str(size)) + "_" + str(qtn) + '.csv')
     return df
 
 
@@ -147,9 +158,8 @@ def train_test_split(X, where=0.8):
     return train, test
 
 
-def loadData(size=IMAGE_SIZE):
-
-    df = pd.read_csv('data_' + (2 * str(IMAGE_SIZE)) + '.csv')
+def loadData(size=IMAGE_SIZE, qtn=20000):
+    df = pd.read_csv('data_' + (2 * str(size)) + "_" + str(qtn) + '.csv')
 
     df['red'] = processArray(df['red'])
     df['green'] = processArray(df['green'])
@@ -171,24 +181,10 @@ def kmeans(df, clusters=2):
 
     print(homogeneity_score(test['class'], clustering.predict(list(test['red']))))
     print(v_measure_score(test['class'], clustering.predict(list(test['red']))))
-    # prob = []
-    # for c in classes:
-    #     prob.append(len(c[c.class == 'healthy']) / len(c))
-    # # Evaluate
-    # prediction = clustering.predict(list(test['red']))
+
+    print("\thomogeneity_score:", homogeneity_score(test['class'], clustering.fit_predict(list(test['red']))))
+    print("\tv_measure_score:", v_measure_score(test['class'], clustering.fit_predict(list(test['red']))))
     
-    
-        
-            
-    # c1 = df[clustering.labels_ == 0]
-    # c2 = df[clustering.labels_ == 1]
-    # c3 = df[clustering.labels_ == 2]
-
-    # print("Class 0 Count:", c1['class'].value_counts())
-    # print("Class 1 count:", c2['class'].value_counts())
-    # print("Class 2 count:", c3['class'].value_counts())
-
-
     return classes
 
 
@@ -205,9 +201,11 @@ def svm(df):
     prediction = clf.predict(list(test['red'].values))
     # print(len(prediction[(prediction == 'healthy') & (test['class'] == 'cancer')]))
     # print(len(prediction[(prediction == 'cancer') & (test['class'] == 'healthy')]))
-    print(prediction)
+    # print(prediction)
     healthy = test[prediction == 'healthy']
     cancer = test[prediction == 'cancer']
+
+    graphThings([healthy, cancer], ratio=False)
 
 
     result = combineImages(healthy)
@@ -242,6 +240,8 @@ def logistic(df):
     healthy = test[prediction == 'healthy']
     cancer = test[prediction == 'cancer']
 
+    graphThings([healthy, cancer], ratio=False)
+
 
     result = combineImages(healthy)
     result.save("healthy_log" + str(IMAGE_SIZE) + ".jpg")
@@ -266,16 +266,16 @@ def agglomerative(df, clusters=2):
         classes.append(train[clustering.labels_ == i])
         print("Class", str(i), "count:\n", classes[-1]['class'].value_counts())
 
-    print(homogeneity_score(test['class'], clustering.fit_predict(list(test['red']))))
-    print(v_measure_score(test['class'], clustering.fit_predict(list(test['red']))))
+    print("\thomogeneity_score:", homogeneity_score(test['class'], clustering.fit_predict(list(test['red']))))
+    print("\tv_measure_score:", v_measure_score(test['class'], clustering.fit_predict(list(test['red']))))
     
     return classes
 
 
-def spectral(df, clusters=2):
+def agglomerative_complete(df, clusters=2):
     train, test = train_test_split(df)
 
-    clustering = SpectralClustering(n_clusters=clusters).fit(list(train['red']))
+    clustering = AgglomerativeClustering(n_clusters=clusters, linkage='complete').fit(list(train['red']))
     print(clustering.labels_)
   
 
@@ -284,51 +284,55 @@ def spectral(df, clusters=2):
         classes.append(train[clustering.labels_ == i])
         print("Class", str(i), "count:\n", classes[-1]['class'].value_counts())
 
-    print(homogeneity_score(test['class'], clustering.fit_predict(list(test['red']))))
-    print(v_measure_score(test['class'], clustering.fit_predict(list(test['red']))))
+    print("\thomogeneity_score:", homogeneity_score(test['class'], clustering.fit_predict(list(test['red']))))
+    print("\tv_measure_score:", v_measure_score(test['class'], clustering.fit_predict(list(test['red']))))
     
     return classes
-
 
 
 def neuralnetwork(df):
     train, test = train_test_split(df)
 
-    clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(2500,1000,500,50,2), random_state=1)
+
+    clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(8), random_state=1)
     clf.fit(list(train['red'].values), train['class'].values)
 
 
     prediction = clf.predict(list(test['red'].values))
     score = clf.score(list(test['red'].values), test['class'].values)
-    print(score)
+    print(str(8), score)
 
     
     healthy = test[prediction == 'healthy']
     cancer = test[prediction == 'cancer']
 
+    graphThings([healthy, cancer], ratio=False)
 
     result = combineImages(healthy)
     result.save("healthy_nn" + str(IMAGE_SIZE) + ".jpg")
     result = combineImages(cancer)
     result.save("cancer_nn" + str(IMAGE_SIZE) + ".jpg")
 
+
 print("Loading Data...")
-# df = processImages()
-df = loadData()
+qtn = 20000
+# df = processImages(qtn=qtn)
+df = loadData(qtn=qtn)
 print("Started Training...")
+classes = svm(df)
 # classes = kmeans(df, 5)
 # print(timeit.timeit("logistic(df)", globals=globals(), number=1))
 # logistic(df)
 # classes = dbscan(df)
 # svm(df)
 # logistic(df)
-neuralnetwork(df)
+# neuralnetwork(df)
 
 # graphThings(classes, ratio=False)
+# 1 is 5, 2 is 2
 
-
-# print("Creating results...")
-# for i, c in enumerate(classes):
-#     result = combineImages(c)
-#     result.save("C" + str(i) + '.jpg')
+print("Creating results...")
+for i, c in enumerate(classes):
+    result = combineImages(c)
+    result.save("C" + str(i) + '.jpg')
 print("Finished")

@@ -4,16 +4,20 @@ import numpy as np
 
 def graphThings(classes, ratio=True):
     count = []
-
+    if len(classes[0]) == 0:
+        pass
     for c in classes:
         counts = c['class'].value_counts()
         total = np.sum(counts)
         if not ratio:
             total = 1
-        if 'cancer' in counts.index:
+        if 'cancer' in counts.index and 'healthy' in counts.index:
             count.append([counts['healthy'] / total, counts['cancer'] / total])
-        else:
+        elif 'healthy' in counts.index:
             arr = [counts['healthy'] / total, 0]
+            count.append(arr)
+        elif 'cancer' in counts.index:
+            arr = [0, counts['cancer'] / total]
             count.append(arr)
 
     count = sorted(count, key=lambda x: x[1])    
