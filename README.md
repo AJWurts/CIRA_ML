@@ -2,7 +2,11 @@
 CIRA (Chromosomal Image Recognition Algorithm) Image Processing and ML
 
 # Uses Machine Learning to label cells as unhealthy or healthy.
-Runs on red cell images. 
+Runs on red cell images.   
+Example Data:  
+![Image1](https://github.com/AJWurts/CIRA_ML/blob/master/Image%20Results/406_healthy-22_cancerous-run2.jpg "K-Means Visualization")    
+More examples and results can be viewed in the Image Results folder.
+
 
 # Machine Learning Algorithms
 ## Clustering Algorithms
