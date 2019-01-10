@@ -197,10 +197,8 @@ def kmeans(df, clusters=2):
         classes.append(cluster)
         # print("Class", str(i), "count:\n", counts)
 
-<<<<<<< HEAD
     print(homogeneity_score(test['class'], clustering.predict(list(test['red']))))
     print(v_measure_score(test['class'], clustering.predict(list(test['red']))))
-=======
     # print(homogeneity_score(test['class'], clustering.predict(list(test['red']))))
     # print(v_measure_score(test['class'], clustering.predict(list(test['red']))))
 
@@ -213,7 +211,6 @@ def kmeans(df, clusters=2):
     print(clusters, "ACcuracy: ", correct / len(test))
 
 
->>>>>>> resultGraphing
 
     print("\thomogeneity_score:", homogeneity_score(test['class'], clustering.fit_predict(list(test['red']))))
     print("\tv_measure_score:", v_measure_score(test['class'], clustering.fit_predict(list(test['red']))))
@@ -373,3 +370,4 @@ classes = svm(df)
 #     result = combineImages(c)
 #     result.save("C" + str(i) + '.jpg')
 print("Finished")
+
