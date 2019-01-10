@@ -171,16 +171,49 @@ def kmeans(df, clusters=2):
     train, test = train_test_split(df)
 
     clustering = KMeans(n_clusters=clusters).fit(list(train['red']))
-    print(clustering.labels_)
+    # print(clustering.labels_)
   
 
     classes = []
+    cluster_labels = {}
     for i in range(clusters):
-        classes.append(train[clustering.labels_ == i])
-        print("Class", str(i), "count:\n", classes[-1]['class'].value_counts())
+        
+        # print(counts)
+        # classes.append((train[clustering.labels_ == i] ))
+        cluster = train[clustering.labels_ == i]
 
+        counts = cluster['class'].value_counts()
+
+        if 'healthy' not in counts:
+            cluster_labels[i] = 'cancer'
+            continue
+        elif 'cancer' not in counts:
+            cluster_labels[i] = 'healthy'
+            continue
+        if counts['healthy'] > counts['cancer']:
+            cluster_labels[i] = 'healthy'
+        else:
+            cluster_labels[i] = 'cancer'
+        classes.append(cluster)
+        # print("Class", str(i), "count:\n", counts)
+
+<<<<<<< HEAD
     print(homogeneity_score(test['class'], clustering.predict(list(test['red']))))
     print(v_measure_score(test['class'], clustering.predict(list(test['red']))))
+=======
+    # print(homogeneity_score(test['class'], clustering.predict(list(test['red']))))
+    # print(v_measure_score(test['class'], clustering.predict(list(test['red']))))
+
+    test_predictions = clustering.fit_predict(list(test['red']))
+    
+    result = np.array(list(map(lambda x: cluster_labels[x], test_predictions)))
+
+    correct = len(test[result == test['class']])
+
+    print(clusters, "ACcuracy: ", correct / len(test))
+
+
+>>>>>>> resultGraphing
 
     print("\thomogeneity_score:", homogeneity_score(test['class'], clustering.fit_predict(list(test['red']))))
     print("\tv_measure_score:", v_measure_score(test['class'], clustering.fit_predict(list(test['red']))))
@@ -319,8 +352,10 @@ qtn = 20000
 # df = processImages(qtn=qtn)
 df = loadData(qtn=qtn)
 print("Started Training...")
+
 classes = svm(df)
 # classes = kmeans(df, 5)
+
 # print(timeit.timeit("logistic(df)", globals=globals(), number=1))
 # logistic(df)
 # classes = dbscan(df)
@@ -331,8 +366,10 @@ classes = svm(df)
 # graphThings(classes, ratio=False)
 # 1 is 5, 2 is 2
 
-print("Creating results...")
-for i, c in enumerate(classes):
-    result = combineImages(c)
-    result.save("C" + str(i) + '.jpg')
+
+
+# print("Creating results...")
+# for i, c in enumerate(classes):
+#     result = combineImages(c)
+#     result.save("C" + str(i) + '.jpg')
 print("Finished")
