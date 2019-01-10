@@ -29,3 +29,7 @@ def graphThings(classes, ratio=True):
     ax.legend()
     plt.show()
     
+
+
+
+
