@@ -11,7 +11,7 @@ The clustering algorithms were used as classifying algorithms by clustering the 
 Accuracy: 0.791
 
 ![Image1](https://lh3.googleusercontent.com/gdN7ptckeO6W30wd1VehuMuQ6RURhS9Mjtx3ZkyKPZ__JH-ViiQshJmcACokZMWoXkD4vK42H4_aU7IFXZePBFRd1XB-J3B2gCPNASh4ety8O_xN8hp0XF73rR-_DgOciRlVLMJ2 "K-Means Visualization")  
-Fig 5. K-Means K=2 Graph: This shows the best clustering result among the 3 chosen methods K-Means, with K=2. The left side would be the unhealthy cluster, and the right side would be the healthy cluster. 
+Image 1. K-Means K=2 Graph: This shows the best clustering result among the 3 chosen methods K-Means, with K=2. The left side would be the unhealthy cluster, and the right side would be the healthy cluster. 
 
 ### Agglomerative Clustering and Ward
 Accuracy: 0.610
